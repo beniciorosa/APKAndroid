@@ -3,7 +3,7 @@
 const express = require('express');
 const cors = require('cors');
 const { resolvePeriod } = require('../src/utils/dateRanges');
-const { getRevenue, listPipelines, countAllDeals } = require('../src/hubspot');
+const { getRevenue, listPipelines, countAllDeals, diagOwners } = require('../src/hubspot');
 
 const app = express();
 const CURRENCY = process.env.CURRENCY || 'BRL';
@@ -96,6 +96,10 @@ app.get('/api/diag/deals', async (req, res) => {
       details: err.response?.data,
     });
   }
+});
+
+app.get('/api/diag/owners', async (req, res) => {
+  res.json(await diagOwners());
 });
 
 app.get('/', (req, res) => {

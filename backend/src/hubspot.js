@@ -194,4 +194,22 @@ async function countAllDeals(from, to) {
   };
 }
 
-module.exports = { getRevenue, listPipelines, countAllDeals };
+// Diagnóstico: tenta listar owners e retorna resultado bruto
+async function diagOwners() {
+  try {
+    const { data } = await axios.get(
+      `${HUBSPOT_BASE}/crm/v3/owners?limit=10`,
+      { headers: authHeaders() }
+    );
+    return { ok: true, count: data.results?.length || 0, sample: data.results?.slice(0, 3) };
+  } catch (err) {
+    return {
+      ok: false,
+      status: err.response?.status,
+      message: err.message,
+      body: err.response?.data,
+    };
+  }
+}
+
+module.exports = { getRevenue, listPipelines, countAllDeals, diagOwners };

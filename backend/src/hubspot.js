@@ -32,7 +32,7 @@ async function searchClosedWonDeals(from, to) {
       filterGroups: [
         {
           filters: [
-            { propertyName: 'dealstage', operator: 'EQ', value: CLOSED_WON_STAGE },
+            { propertyName: 'hs_is_closed_won', operator: 'EQ', value: 'true' },
             { propertyName: 'closedate', operator: 'GTE', value: from.getTime().toString() },
             { propertyName: 'closedate', operator: 'LTE', value: to.getTime().toString() },
           ],
@@ -134,4 +134,53 @@ async function getRevenue(period) {
   return result;
 }
 
-module.exports = { getRevenue };
+// Diagnóstico: lista pipelines e stages
+async function listPipelines() {
+  const { data } = await axios.get(
+    `${HUBSPOT_BASE}/crm/v3/pipelines/deals`,
+    { headers: authHeaders() }
+  );
+  return data.results.map((p) => ({
+    id: p.id,
+    label: p.label,
+    stages: p.stages.map((s) => ({
+      id: s.id,
+      label: s.label,
+      closedWon: s.metadata?.isClosed === 'true' && s.metadata?.probability === '1.0',
+      metadata: s.metadata,
+    })),
+  }));
+}
+
+// Diagnóstico: conta todos os deals (sem filtro) para verificar acesso
+async function countAllDeals(from, to) {
+  const body = {
+    filterGroups: [
+      {
+        filters: [
+          { propertyName: 'closedate', operator: 'GTE', value: from.getTime().toString() },
+          { propertyName: 'closedate', operator: 'LTE', value: to.getTime().toString() },
+        ],
+      },
+    ],
+    properties: ['amount', 'dealstage', 'hs_is_closed_won', 'closedate'],
+    limit: 100,
+  };
+  const { data } = await axios.post(
+    `${HUBSPOT_BASE}/crm/v3/objects/deals/search`,
+    body,
+    { headers: authHeaders() }
+  );
+  return {
+    total: data.total,
+    samples: data.results.slice(0, 5).map((d) => ({
+      id: d.id,
+      amount: d.properties.amount,
+      dealstage: d.properties.dealstage,
+      hs_is_closed_won: d.properties.hs_is_closed_won,
+      closedate: d.properties.closedate,
+    })),
+  };
+}
+
+module.exports = { getRevenue, listPipelines, countAllDeals };

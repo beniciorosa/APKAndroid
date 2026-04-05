@@ -75,12 +75,14 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    private fun formatUpdatedAt(iso: String): String = try {
-        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-        val formatter = SimpleDateFormat("dd/MM HH:mm", Locale("pt", "BR"))
-        val date: Date = parser.parse(iso) ?: return iso
-        formatter.format(date)
-    } catch (_: Exception) {
-        iso
+    private fun formatUpdatedAt(iso: String): String {
+        return try {
+            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+            val formatter = SimpleDateFormat("dd/MM HH:mm", Locale("pt", "BR"))
+            val date: Date = parser.parse(iso) ?: return iso
+            formatter.format(date)
+        } catch (_: Exception) {
+            iso
+        }
     }
 }

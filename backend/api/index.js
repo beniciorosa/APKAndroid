@@ -3,7 +3,7 @@
 const express = require('express');
 const cors = require('cors');
 const { resolvePeriod } = require('../src/utils/dateRanges');
-const { getRevenue } = require('../src/hubspot');
+const { getRevenue, listPipelines, countAllDeals } = require('../src/hubspot');
 
 const app = express();
 const CURRENCY = process.env.CURRENCY || 'BRL';
@@ -64,6 +64,37 @@ app.get('/api/revenue/by-seller', async (req, res) => {
     console.error('[/api/revenue/by-seller]', err.message);
     const status = err.response?.status || 400;
     res.status(status).json({ error: err.message });
+  }
+});
+
+// Diagnóstico: lista pipelines e stages
+app.get('/api/diag/pipelines', async (req, res) => {
+  try {
+    const pipelines = await listPipelines();
+    res.json({ pipelines });
+  } catch (err) {
+    res.status(err.response?.status || 500).json({
+      error: err.message,
+      details: err.response?.data,
+    });
+  }
+});
+
+// Diagnóstico: conta deals no período (sem filtro de stage)
+app.get('/api/diag/deals', async (req, res) => {
+  try {
+    const { period = 'this-month', from, to } = req.query;
+    const range = resolvePeriod(period, from, to);
+    const result = await countAllDeals(range.from, range.to);
+    res.json({
+      period: { label: range.label, from: range.from.toISOString(), to: range.to.toISOString() },
+      ...result,
+    });
+  } catch (err) {
+    res.status(err.response?.status || 500).json({
+      error: err.message,
+      details: err.response?.data,
+    });
   }
 });
 

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -m 10 https://apk-android.vercel.app/api/health)",
+      "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/revenue?period=this-month\")",
+      "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/revenue/by-seller?period=last-30-days\")"
+    ]
+  }
+}

@@ -4,7 +4,16 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M30,70L30,45L40,45L40,70ZM48,70L48,35L58,35L58,70ZM66,70L66,50L76,50L76,70Z" />
+    <group android:translateX="30" android:translateY="30">
+        <group android:scaleX="0.48" android:scaleY="0.48">
+            <!-- Quadrado arredondado preto -->
+            <path
+                android:fillColor="#000000"
+                android:pathData="M15,0 L85,0 Q100,0 100,15 L100,85 Q100,100 85,100 L15,100 Q0,100 0,85 L0,15 Q0,0 15,0 Z" />
+            <!-- Triângulo branco -->
+            <path
+                android:fillColor="#FFFFFF"
+                android:pathData="M0,0 L52,0 L0,52 Z" />
+        </group>
+    </group>
 </vector>

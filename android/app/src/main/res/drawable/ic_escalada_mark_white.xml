@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Quadrado arredondado branco -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M15,0 L85,0 Q100,0 100,15 L100,85 Q100,100 85,100 L15,100 Q0,100 0,85 L0,15 Q0,0 15,0 Z" />
+    <!-- Triângulo preto -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M0,0 L52,0 L0,52 Z" />
+</vector>

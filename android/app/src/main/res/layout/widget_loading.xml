@@ -5,12 +5,23 @@
     android:background="@drawable/widget_background"
     android:orientation="vertical"
     android:padding="16dp"
-    android:gravity="center">
+    android:gravity="start|center_vertical">
+
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_escalada_mark_white"
+        android:contentDescription="@string/app_name" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="8dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/widget_loading"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp" />
+        android:textColor="#CCFFFFFF"
+        android:textSize="11sp"
+        android:letterSpacing="0.1" />
 </LinearLayout>

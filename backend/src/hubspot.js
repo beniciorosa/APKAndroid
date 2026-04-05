@@ -61,28 +61,40 @@ async function searchClosedWonDeals(from, to) {
   return deals;
 }
 
-// Busca nome do owner (com cache individual por id, TTL longo).
-async function getOwnerName(ownerId) {
-  if (!ownerId) return 'Sem vendedor';
-
-  const cacheKey = `owner:${ownerId}`;
+// Busca todos os owners de uma vez e monta um mapa {id: nome}
+async function getAllOwnersMap() {
+  const cacheKey = 'owners:all';
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
+  const map = new Map();
+  let after = undefined;
   try {
-    const { data } = await axios.get(
-      `${HUBSPOT_BASE}/crm/v3/owners/${ownerId}`,
-      { headers: authHeaders() }
-    );
-    const name =
-      [data.firstName, data.lastName].filter(Boolean).join(' ') ||
-      data.email ||
-      `Owner ${ownerId}`;
-    cache.set(cacheKey, name, 60 * 60 * 1000); // 1h
-    return name;
+    while (true) {
+      const url = new URL(`${HUBSPOT_BASE}/crm/v3/owners/`);
+      url.searchParams.set('limit', '100');
+      if (after) url.searchParams.set('after', after);
+      const { data } = await axios.get(url.toString(), { headers: authHeaders() });
+      for (const o of data.results) {
+        const name =
+          [o.firstName, o.lastName].filter(Boolean).join(' ') ||
+          o.email ||
+          `Owner ${o.id}`;
+        map.set(String(o.id), name);
+      }
+      if (data.paging?.next?.after) after = data.paging.next.after;
+      else break;
+    }
   } catch (err) {
-    return `Owner ${ownerId}`;
+    console.error('[getAllOwnersMap] falha:', err.response?.status, err.message);
   }
+  cache.set(cacheKey, map, 60 * 60 * 1000); // 1h
+  return map;
+}
+
+function resolveOwnerName(ownersMap, ownerId) {
+  if (!ownerId) return 'Sem vendedor';
+  return ownersMap.get(String(ownerId)) || `Owner ${ownerId}`;
 }
 
 // Agrega deals → { total, bySeller: [{ownerId, name, total, dealCount}] }
@@ -103,13 +115,12 @@ async function aggregateDeals(deals) {
     agg.dealCount += 1;
   }
 
-  // Resolve nomes em paralelo
-  const sellers = await Promise.all(
-    [...byOwner.values()].map(async (s) => ({
-      ...s,
-      name: await getOwnerName(s.ownerId),
-    }))
-  );
+  // Resolve nomes usando o mapa de owners (1 chamada batch)
+  const ownersMap = await getAllOwnersMap();
+  const sellers = [...byOwner.values()].map((s) => ({
+    ...s,
+    name: resolveOwnerName(ownersMap, s.ownerId),
+  }));
 
   sellers.sort((a, b) => b.total - a.total);
   return { total, sellers };

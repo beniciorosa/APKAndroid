@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 
 data class DashboardUiState(
@@ -77,8 +78,12 @@ class DashboardViewModel @Inject constructor(
 
     private fun formatUpdatedAt(iso: String): String {
         return try {
-            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-            val formatter = SimpleDateFormat("dd/MM HH:mm", Locale("pt", "BR"))
+            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
+            val formatter = SimpleDateFormat("dd/MM HH:mm", Locale("pt", "BR")).apply {
+                timeZone = TimeZone.getDefault()
+            }
             val date: Date = parser.parse(iso) ?: return iso
             formatter.format(date)
         } catch (_: Exception) {

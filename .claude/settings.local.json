@@ -6,7 +6,8 @@
       "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/revenue/by-seller?period=last-30-days\")",
       "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/diag/pipelines\")",
       "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/diag/deals?period=this-month\")",
-      "Bash(curl -s -m 60 \"https://apk-android.vercel.app/api/revenue/by-seller?period=this-month\")"
+      "Bash(curl -s -m 60 \"https://apk-android.vercel.app/api/revenue/by-seller?period=this-month\")",
+      "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/diag/owners\")"
     ]
   }
 }

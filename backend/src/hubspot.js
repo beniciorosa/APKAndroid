@@ -115,34 +115,38 @@ async function aggregateDeals(deals) {
     agg.dealCount += 1;
   }
 
-  // Resolve nomes usando o mapa de owners (1 chamada batch)
-  const ownersMap = await getAllOwnersMap();
-  const sellers = [...byOwner.values()].map((s) => ({
-    ...s,
-    name: resolveOwnerName(ownersMap, s.ownerId),
-  }));
-
+  const sellers = [...byOwner.values()];
   sellers.sort((a, b) => b.total - a.total);
   return { total, sellers };
 }
 
 async function getRevenue(period) {
+  // Cache apenas dos dados dos deals (sem nomes — nomes são resolvidos depois)
   const cacheKey = `revenue:${period.from.getTime()}:${period.to.getTime()}`;
-  const cached = cache.get(cacheKey);
-  if (cached) return cached;
+  let aggregated = cache.get(cacheKey);
+  let dealCount = cache.get(`${cacheKey}:count`);
 
-  const deals = await searchClosedWonDeals(period.from, period.to);
-  const agg = await aggregateDeals(deals);
+  if (!aggregated) {
+    const deals = await searchClosedWonDeals(period.from, period.to);
+    aggregated = await aggregateDeals(deals);
+    dealCount = deals.length;
+    cache.set(cacheKey, aggregated, 5 * 60 * 1000);
+    cache.set(`${cacheKey}:count`, dealCount, 5 * 60 * 1000);
+  }
 
-  const result = {
-    total: agg.total,
-    sellers: agg.sellers,
-    dealCount: deals.length,
+  // Resolve nomes sempre na hora (owners tem cache próprio de 1h)
+  const ownersMap = await getAllOwnersMap();
+  const sellers = aggregated.sellers.map((s) => ({
+    ...s,
+    name: resolveOwnerName(ownersMap, s.ownerId),
+  }));
+
+  return {
+    total: aggregated.total,
+    sellers,
+    dealCount,
     updatedAt: new Date().toISOString(),
   };
-
-  cache.set(cacheKey, result, 5 * 60 * 1000); // 5 min
-  return result;
 }
 
 // Diagnóstico: lista pipelines e stages

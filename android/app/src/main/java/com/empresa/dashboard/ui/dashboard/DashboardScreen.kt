@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.empresa.dashboard.R
 import com.empresa.dashboard.data.models.SellerDto
+import com.empresa.dashboard.ui.components.CustomDateRangePicker
 import com.empresa.dashboard.ui.model.Period
 import com.empresa.dashboard.ui.theme.AppTheme
 import com.empresa.dashboard.ui.theme.ThemePalette
@@ -33,9 +34,6 @@ import com.empresa.dashboard.ui.theme.ThemePrefs
 import com.empresa.dashboard.ui.theme.palette
 import com.empresa.dashboard.ui.util.CurrencyFormatter
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,13 +125,16 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
     }
 
     if (showDatePicker) {
-        DateRangePickerDialog(
+        CustomDateRangePicker(
             colors = colors,
-            theme = currentTheme,
             onDismiss = { showDatePicker = false },
             onConfirm = { from, to ->
                 showDatePicker = false
-                viewModel.selectPeriod(Period.CUSTOM, from, to)
+                viewModel.selectPeriod(
+                    Period.CUSTOM,
+                    from.toString(),   // ISO yyyy-MM-dd
+                    to.toString(),
+                )
             },
         )
     }
@@ -380,133 +381,3 @@ private fun ThemePickerSheet(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DateRangePickerDialog(
-    colors: ThemePalette,
-    theme: AppTheme,
-    onDismiss: () -> Unit,
-    onConfirm: (from: String, to: String) -> Unit,
-) {
-    val state = rememberDateRangePickerState()
-
-    // Color scheme customizado pro date picker
-    val customColorScheme = if (theme == AppTheme.MONO) {
-        androidx.compose.material3.darkColorScheme(
-            primary = Color.White,
-            onPrimary = Color.Black,
-            surface = colors.surface,
-            onSurface = colors.onSurface,
-            surfaceVariant = colors.card,
-            onSurfaceVariant = colors.muted,
-            background = colors.background,
-            onBackground = colors.onBackground,
-            primaryContainer = Color.White,
-            onPrimaryContainer = Color.Black,
-            secondaryContainer = colors.card,
-            onSecondaryContainer = colors.onBackground,
-        )
-    } else {
-        androidx.compose.material3.lightColorScheme(
-            primary = colors.primary,
-            onPrimary = Color.White,
-            surface = Color.White,
-            onSurface = colors.onBackground,
-            surfaceVariant = colors.card,
-            onSurfaceVariant = colors.muted,
-            background = Color.White,
-            onBackground = colors.onBackground,
-        )
-    }
-
-    MaterialTheme(colorScheme = customColorScheme) {
-        DatePickerDialog(
-            onDismissRequest = onDismiss,
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val from = state.selectedStartDateMillis
-                        val to = state.selectedEndDateMillis
-                        if (from != null && to != null) onConfirm(toIsoDate(from), toIsoDate(to))
-                    },
-                    enabled = state.selectedStartDateMillis != null && state.selectedEndDateMillis != null,
-                ) {
-                    Text(
-                        "Aplicar",
-                        color = if (state.selectedStartDateMillis != null && state.selectedEndDateMillis != null)
-                            colors.onBackground else colors.muted,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text("Cancelar", color = colors.muted)
-                }
-            },
-            colors = DatePickerDefaults.colors(
-                containerColor = colors.surface,
-            ),
-        ) {
-            DateRangePicker(
-                state = state,
-                modifier = Modifier.height(500.dp),
-                title = {
-                    Text(
-                        "Escolha o período",
-                        modifier = Modifier.padding(start = 24.dp, top = 16.dp),
-                        color = colors.muted,
-                        fontSize = 12.sp,
-                        letterSpacing = 1.5.sp,
-                    )
-                },
-                headline = {
-                    Text(
-                        buildHeadline(state.selectedStartDateMillis, state.selectedEndDateMillis),
-                        modifier = Modifier.padding(start = 24.dp, bottom = 12.dp),
-                        color = colors.onBackground,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                },
-                showModeToggle = false,
-                colors = DatePickerDefaults.colors(
-                    containerColor = colors.surface,
-                    titleContentColor = colors.muted,
-                    headlineContentColor = colors.onBackground,
-                    weekdayContentColor = colors.muted,
-                    subheadContentColor = colors.onBackground,
-                    yearContentColor = colors.onSurface,
-                    currentYearContentColor = colors.onBackground,
-                    selectedYearContentColor = colors.background,
-                    selectedYearContainerColor = colors.onBackground,
-                    dayContentColor = colors.onSurface,
-                    disabledDayContentColor = colors.muted.copy(alpha = 0.3f),
-                    selectedDayContentColor = colors.background,
-                    disabledSelectedDayContentColor = colors.muted,
-                    selectedDayContainerColor = colors.onBackground,
-                    disabledSelectedDayContainerColor = colors.card,
-                    todayContentColor = colors.onBackground,
-                    todayDateBorderColor = colors.onBackground,
-                    dayInSelectionRangeContentColor = colors.onBackground,
-                    dayInSelectionRangeContainerColor = colors.card,
-                    dividerColor = colors.card,
-                ),
-            )
-        }
-    }
-}
-
-private fun buildHeadline(from: Long?, to: Long?): String {
-    val fmt = SimpleDateFormat("dd MMM", Locale("pt", "BR"))
-    return when {
-        from == null -> "Selecione as datas"
-        to == null -> fmt.format(java.util.Date(from))
-        else -> "${fmt.format(java.util.Date(from))} → ${fmt.format(java.util.Date(to))}"
-    }
-}
-
-private fun toIsoDate(millis: Long): String {
-    val cal = Calendar.getInstance().apply { timeInMillis = millis }
-    return SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.time)
-}

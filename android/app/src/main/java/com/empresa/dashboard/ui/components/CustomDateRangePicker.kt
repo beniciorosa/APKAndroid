@@ -230,8 +230,8 @@ private fun CalendarGrid(
     // getDayOfWeek: MONDAY=1..SUNDAY=7. Queremos começar no domingo (0..6)
     val firstDayOffset = firstDay.dayOfWeek.value % 7 // SUNDAY(7)%7=0, MONDAY(1)%7=1, etc
 
-    val totalCells = firstDayOffset + daysInMonth
-    val rows = (totalCells + 6) / 7
+    // Sempre renderizar 6 semanas para manter altura fixa do modal
+    val rows = 6
 
     Column {
         for (row in 0 until rows) {

@@ -1,0 +1,19 @@
+{
+  "name": "dashescalada-backend",
+  "version": "1.0.0",
+  "description": "Backend intermediário entre app Android e HubSpot",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "node --watch api/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

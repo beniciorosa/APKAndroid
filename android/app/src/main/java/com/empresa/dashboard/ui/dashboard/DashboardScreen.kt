@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.foundation.Image
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,25 +53,12 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(
-                                if (currentTheme == AppTheme.MONO) R.drawable.ic_escalada_mark_white
-                                else R.drawable.ic_escalada_mark
-                            ),
-                            contentDescription = null,
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(28.dp),
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Text(
-                            "ESCALADA",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            letterSpacing = 2.sp,
-                            color = colors.onBackground,
-                        )
-                    }
+                    Image(
+                        painter = painterResource(R.drawable.escalada_wordmark),
+                        contentDescription = "ESCALADA",
+                        modifier = Modifier.height(28.dp),
+                        colorFilter = ColorFilter.tint(colors.onBackground),
+                    )
                 },
                 actions = {
                     IconButton(onClick = { showThemeSheet = true }) {

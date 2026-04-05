@@ -7,7 +7,10 @@
       "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/diag/pipelines\")",
       "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/diag/deals?period=this-month\")",
       "Bash(curl -s -m 60 \"https://apk-android.vercel.app/api/revenue/by-seller?period=this-month\")",
-      "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/diag/owners\")"
+      "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/diag/owners\")",
+      "Bash(curl -s -m 60 \"https://apk-android.vercel.app/api/revenue/by-seller?period=last-30-days\")",
+      "Bash(python -c \"from PIL import Image; img = Image.open\\(''/c/Users/dhiee/OneDrive/Desktop/APKAndroid/android/app/src/main/res/drawable/escalada_wordmark.png''\\); print\\(''mode:'', img.mode\\); print\\(''size:'', img.size\\); print\\(''has alpha:'', img.mode in \\(''RGBA'', ''LA''\\) or \\(img.mode == ''P'' and ''transparency'' in img.info\\)\\)\")",
+      "Bash(python -c \"from PIL import Image; img = Image.open\\(r''C:\\\\Users\\\\dhiee\\\\OneDrive\\\\Desktop\\\\APKAndroid\\\\android\\\\app\\\\src\\\\main\\\\res\\\\drawable\\\\escalada_wordmark.png''\\); print\\(''mode:'', img.mode\\); print\\(''size:'', img.size\\)\")"
     ]
   }
 }

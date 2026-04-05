@@ -19,13 +19,10 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
-import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -61,27 +58,14 @@ class RevenueWidget : GlanceAppWidget() {
                 verticalAlignment = Alignment.Top,
                 horizontalAlignment = Alignment.Start,
             ) {
-                // Header: logo + marca
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Image(
-                        provider = ImageProvider(R.drawable.ic_escalada_mark_white),
-                        contentDescription = null,
-                        modifier = GlanceModifier.size(16.dp),
-                    )
-                    Spacer(GlanceModifier.size(8.dp))
-                    Text(
-                        "ESCALADA",
-                        style = TextStyle(
-                            color = ColorProvider(Color(0x99FFFFFF)),
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                    )
-                }
-                Spacer(GlanceModifier.height(6.dp))
+                // Header: logo Escalada
+                Image(
+                    provider = ImageProvider(R.drawable.escalada_wordmark),
+                    contentDescription = "ESCALADA",
+                    modifier = GlanceModifier.height(14.dp),
+                    colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(Color.White)),
+                )
+                Spacer(GlanceModifier.height(8.dp))
                 Text(
                     label.uppercase(),
                     style = TextStyle(

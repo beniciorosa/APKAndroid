@@ -115,7 +115,8 @@ async function aggregateDeals(deals) {
     agg.dealCount += 1;
   }
 
-  const sellers = [...byOwner.values()];
+  // Remove vendedor "sem owner" (ownerId null) — não queremos mostrar
+  const sellers = [...byOwner.values()].filter((s) => s.ownerId !== null);
   sellers.sort((a, b) => b.total - a.total);
   return { total, sellers };
 }

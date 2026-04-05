@@ -4,12 +4,9 @@
     android:height="48dp"
     android:viewportWidth="100"
     android:viewportHeight="100">
-    <!-- Quadrado arredondado preto -->
+    <!-- Forma única: quadrado com canto superior-esquerdo cortado em diagonal
+         e demais cantos arredondados -->
     <path
         android:fillColor="#000000"
-        android:pathData="M15,0 L85,0 Q100,0 100,15 L100,85 Q100,100 85,100 L15,100 Q0,100 0,85 L0,15 Q0,0 15,0 Z" />
-    <!-- Triângulo branco (dobra do canto superior esquerdo) -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M0,0 L52,0 L0,52 Z" />
+        android:pathData="M45,0 L85,0 Q100,0 100,15 L100,85 Q100,100 85,100 L15,100 Q0,100 0,85 L0,45 L45,0 Z" />
 </vector>

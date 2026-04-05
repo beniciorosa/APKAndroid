@@ -6,14 +6,9 @@
     android:viewportHeight="108">
     <group android:translateX="30" android:translateY="30">
         <group android:scaleX="0.48" android:scaleY="0.48">
-            <!-- Quadrado arredondado preto -->
             <path
                 android:fillColor="#000000"
-                android:pathData="M15,0 L85,0 Q100,0 100,15 L100,85 Q100,100 85,100 L15,100 Q0,100 0,85 L0,15 Q0,0 15,0 Z" />
-            <!-- Triângulo branco -->
-            <path
-                android:fillColor="#FFFFFF"
-                android:pathData="M0,0 L52,0 L0,52 Z" />
+                android:pathData="M45,0 L85,0 Q100,0 100,15 L100,85 Q100,100 85,100 L15,100 Q0,100 0,85 L0,45 L45,0 Z" />
         </group>
     </group>
 </vector>

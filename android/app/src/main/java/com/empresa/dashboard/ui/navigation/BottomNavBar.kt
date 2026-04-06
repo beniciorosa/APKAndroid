@@ -36,16 +36,17 @@ fun BottomNavBar(
             .fillMaxWidth()
             .background(colors.background)
             .navigationBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
-        // Barra pill flutuante
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(68.dp)
                 .clip(RoundedCornerShape(32.dp))
                 .background(colors.surface)
-                .padding(horizontal = 8.dp, vertical = 10.dp),
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -54,18 +55,9 @@ fun BottomNavBar(
                 val isHome = route == NavRoute.HOME
 
                 if (isHome) {
-                    HomeButton(
-                        isSelected = isSelected,
-                        colors = colors,
-                        onClick = { onNavigate(route) },
-                    )
+                    HomeButton(isSelected, colors) { onNavigate(route) }
                 } else {
-                    SideTab(
-                        route = route,
-                        isSelected = isSelected,
-                        colors = colors,
-                        onClick = { onNavigate(route) },
-                    )
+                    SideTab(route, isSelected, colors) { onNavigate(route) }
                 }
             }
         }
@@ -78,17 +70,16 @@ private fun HomeButton(
     colors: ThemePalette,
     onClick: () -> Unit,
 ) {
-    val gradient = if (isSelected) {
-        Brush.linearGradient(listOf(colors.accentGradientStart, colors.accentGradientEnd))
-    } else {
-        Brush.linearGradient(listOf(colors.card, colors.card))
-    }
-
+    // Tamanho fixo sempre
     Box(
         modifier = Modifier
             .size(52.dp)
             .clip(CircleShape)
-            .background(gradient)
+            .background(
+                Brush.linearGradient(
+                    listOf(colors.accentGradientStart, colors.accentGradientEnd)
+                )
+            )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -101,7 +92,7 @@ private fun HomeButton(
             contentDescription = "Home",
             modifier = Modifier.size(26.dp),
             colorFilter = ColorFilter.tint(
-                if (isSelected) colors.background else colors.muted
+                if (isSelected) colors.background else colors.background.copy(alpha = 0.5f)
             ),
         )
     }
@@ -114,21 +105,15 @@ private fun SideTab(
     colors: ThemePalette,
     onClick: () -> Unit,
 ) {
-    val textGradient = if (isSelected) {
-        Brush.linearGradient(listOf(colors.accentGradientStart, colors.accentGradientEnd))
-    } else {
-        Brush.linearGradient(listOf(colors.muted, colors.muted))
-    }
-
+    // Tamanho fixo: mesma largura e altura sempre
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
+            .width(80.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick,
-            )
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
@@ -144,16 +129,21 @@ private fun SideTab(
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             color = if (isSelected) colors.onBackground else colors.muted,
         )
-        // Indicador de seleção com degradê
-        if (isSelected) {
-            Spacer(Modifier.height(4.dp))
-            Box(
-                modifier = Modifier
-                    .width(20.dp)
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(1.5.dp))
-                    .background(textGradient),
-            )
-        }
+        Spacer(Modifier.height(5.dp))
+        // Indicador — sempre ocupa espaço, muda visibilidade
+        Box(
+            modifier = Modifier
+                .width(20.dp)
+                .height(3.dp)
+                .clip(RoundedCornerShape(1.5.dp))
+                .background(
+                    if (isSelected) Brush.linearGradient(
+                        listOf(colors.accentGradientStart, colors.accentGradientEnd)
+                    )
+                    else Brush.linearGradient(
+                        listOf(Color.Transparent, Color.Transparent)
+                    )
+                ),
+        )
     }
 }

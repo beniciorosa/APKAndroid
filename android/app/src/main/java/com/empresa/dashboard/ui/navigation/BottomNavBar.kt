@@ -15,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -35,42 +34,38 @@ fun BottomNavBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.background),
+            .background(colors.background)
+            .navigationBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        // Barra de fundo com cantos arredondados no topo
-        Box(
+        // Barra pill flutuante
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 8.dp)
-                .navigationBarsPadding()
-                .clip(RoundedCornerShape(28.dp))
+                .clip(RoundedCornerShape(32.dp))
                 .background(colors.surface)
-                .padding(vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                NavRoute.values().forEach { route ->
-                    val isSelected = route == currentRoute
-                    val isHome = route == NavRoute.HOME
+            NavRoute.values().forEach { route ->
+                val isSelected = route == currentRoute
+                val isHome = route == NavRoute.HOME
 
-                    if (isHome) {
-                        HomeButton(
-                            isSelected = isSelected,
-                            colors = colors,
-                            onClick = { onNavigate(route) },
-                        )
-                    } else {
-                        SideTab(
-                            route = route,
-                            isSelected = isSelected,
-                            colors = colors,
-                            onClick = { onNavigate(route) },
-                        )
-                    }
+                if (isHome) {
+                    HomeButton(
+                        isSelected = isSelected,
+                        colors = colors,
+                        onClick = { onNavigate(route) },
+                    )
+                } else {
+                    SideTab(
+                        route = route,
+                        isSelected = isSelected,
+                        colors = colors,
+                        onClick = { onNavigate(route) },
+                    )
                 }
             }
         }
@@ -91,14 +86,7 @@ private fun HomeButton(
 
     Box(
         modifier = Modifier
-            .offset(y = (-20).dp)
-            .shadow(
-                elevation = if (isSelected) 12.dp else 4.dp,
-                shape = CircleShape,
-                ambientColor = colors.accentGradientStart.copy(alpha = 0.3f),
-                spotColor = colors.accentGradientEnd.copy(alpha = 0.3f),
-            )
-            .size(64.dp)
+            .size(52.dp)
             .clip(CircleShape)
             .background(gradient)
             .clickable(
@@ -111,7 +99,7 @@ private fun HomeButton(
         Image(
             painter = painterResource(R.drawable.escalada_mark),
             contentDescription = "Home",
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(26.dp),
             colorFilter = ColorFilter.tint(
                 if (isSelected) colors.background else colors.muted
             ),

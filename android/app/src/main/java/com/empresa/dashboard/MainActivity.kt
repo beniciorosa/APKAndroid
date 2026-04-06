@@ -71,6 +71,7 @@ class MainActivity : ComponentActivity() {
                             .padding(padding)
                             .background(colors.background),
                         beyondViewportPageCount = 1,
+                        userScrollEnabled = false,
                     ) { page ->
                         when (pages[page]) {
                             NavRoute.OPERATIONAL -> OperationalScreen(colors = colors)

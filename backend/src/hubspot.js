@@ -215,42 +215,19 @@ async function getRevenueByProduct(period) {
     return { products: [], total: 0, dealCount: 0, updatedAt: new Date().toISOString() };
   }
 
-  // 1. Buscar associations deal → line_items
-  const associations = await getLineItemsForDeals(dealIds);
-  const lineItemIds = [...new Set(associations.map((a) => a.lineItemId))];
-
-  let products;
+  // Agregar por dealname (nome do negócio como "produto")
+  const byName = new Map();
   let total = 0;
-
-  if (lineItemIds.length > 0) {
-    // Tem line items — agregar por nome de produto
-    const lineItems = await fetchLineItemDetails(lineItemIds);
-    const byProduct = new Map();
-    for (const item of lineItems) {
-      const name = item.properties.name || 'Sem nome';
-      const amount = parseFloat(item.properties.amount || '0') || 0;
-      const qty = parseInt(item.properties.quantity || '1', 10) || 1;
-      total += amount;
-      if (!byProduct.has(name)) byProduct.set(name, { name, total: 0, quantity: 0 });
-      const p = byProduct.get(name);
-      p.total += amount;
-      p.quantity += qty;
-    }
-    products = [...byProduct.values()].sort((a, b) => b.total - a.total);
-  } else {
-    // Sem line items — usar dealname como "produto"
-    const byName = new Map();
-    for (const deal of deals) {
-      const name = deal.properties.dealname || 'Sem nome';
-      const amount = parseFloat(deal.properties.amount || '0') || 0;
-      total += amount;
-      if (!byName.has(name)) byName.set(name, { name, total: 0, quantity: 0 });
-      const p = byName.get(name);
-      p.total += amount;
-      p.quantity += 1;
-    }
-    products = [...byName.values()].sort((a, b) => b.total - a.total);
+  for (const deal of deals) {
+    const name = deal.properties.dealname || 'Sem nome';
+    const amount = parseFloat(deal.properties.amount || '0') || 0;
+    total += amount;
+    if (!byName.has(name)) byName.set(name, { name, total: 0, quantity: 0 });
+    const p = byName.get(name);
+    p.total += amount;
+    p.quantity += 1;
   }
+  const products = [...byName.values()].sort((a, b) => b.total - a.total);
 
   const result = { products, total, dealCount: deals.length, updatedAt: new Date().toISOString() };
   cache.set(cacheKey, result, 5 * 60 * 1000);

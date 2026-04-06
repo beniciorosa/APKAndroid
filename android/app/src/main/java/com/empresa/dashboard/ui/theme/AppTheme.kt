@@ -47,6 +47,8 @@ data class ThemePalette(
     val primaryGradientStart: Color,
     val primaryGradientEnd: Color,
     val onPrimary: Color,
+    val accentGradientStart: Color,
+    val accentGradientEnd: Color,
 )
 
 fun palette(theme: AppTheme): ThemePalette = when (theme) {
@@ -61,6 +63,8 @@ fun palette(theme: AppTheme): ThemePalette = when (theme) {
         primaryGradientStart = Color(0xFF000000),
         primaryGradientEnd = Color(0xFF2A2A2A),
         onPrimary = Color(0xFF000000),
+        accentGradientStart = Color(0xFFFFFFFF),
+        accentGradientEnd = Color(0xFFB0B0B0),
     )
     AppTheme.BLUE -> ThemePalette(
         background = ThemeColors.BlueBackground,
@@ -73,6 +77,8 @@ fun palette(theme: AppTheme): ThemePalette = when (theme) {
         primaryGradientStart = ThemeColors.BluePrimary,
         primaryGradientEnd = ThemeColors.BlueSecondary,
         onPrimary = Color.White,
+        accentGradientStart = ThemeColors.BluePrimary,
+        accentGradientEnd = ThemeColors.BlueSecondary,
     )
 }
 

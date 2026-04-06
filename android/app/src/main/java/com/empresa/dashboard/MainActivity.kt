@@ -40,11 +40,10 @@ class MainActivity : ComponentActivity() {
             val colors = palette(currentTheme)
             val scope = rememberCoroutineScope()
 
-            // Páginas na ordem: Operacional(0), Home(1), Comercial(2)
+            // Páginas: Operacional(0), Home(1), Comercial(2)
             val pages = NavRoute.values()
             val pagerState = rememberPagerState(initialPage = 1) { pages.size }
 
-            // Sync bottom bar com pager
             val currentRoute by remember {
                 derivedStateOf { pages[pagerState.currentPage] }
             }
@@ -59,7 +58,10 @@ class MainActivity : ComponentActivity() {
                             colors = colors,
                             onNavigate = { route ->
                                 val idx = pages.indexOf(route)
-                                scope.launch { pagerState.animateScrollToPage(idx) }
+                                scope.launch {
+                                    // Scroll direto sem animação intermediária
+                                    pagerState.scrollToPage(idx)
+                                }
                             },
                         )
                     },
@@ -70,15 +72,14 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                             .padding(padding)
                             .background(colors.background),
-                        beyondViewportPageCount = 1,
-                        userScrollEnabled = false,
+                        beyondViewportPageCount = 2,
                     ) { page ->
                         when (pages[page]) {
                             NavRoute.OPERATIONAL -> OperationalScreen(colors = colors)
                             NavRoute.HOME -> HomeScreen(
                                 colors = colors,
                                 onNavigateCommercial = {
-                                    scope.launch { pagerState.animateScrollToPage(2) }
+                                    scope.launch { pagerState.scrollToPage(2) }
                                 },
                             )
                             NavRoute.COMMERCIAL -> DashboardScreen()

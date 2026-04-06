@@ -8,14 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.empresa.dashboard.ui.dashboard.DashboardScreen
 import com.empresa.dashboard.ui.home.HomeScreen
 import com.empresa.dashboard.ui.navigation.BottomNavBar
@@ -25,6 +24,7 @@ import com.empresa.dashboard.ui.theme.AppTheme
 import com.empresa.dashboard.ui.theme.ThemePrefs
 import com.empresa.dashboard.ui.theme.palette
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -38,8 +38,16 @@ class MainActivity : ComponentActivity() {
             val ctx = LocalContext.current
             val currentTheme by ThemePrefs.flow(ctx).collectAsState(initial = AppTheme.MONO)
             val colors = palette(currentTheme)
-            val navController = rememberNavController()
-            var currentRoute by remember { mutableStateOf(NavRoute.HOME) }
+            val scope = rememberCoroutineScope()
+
+            // Páginas na ordem: Operacional(0), Home(1), Comercial(2)
+            val pages = NavRoute.values()
+            val pagerState = rememberPagerState(initialPage = 1) { pages.size }
+
+            // Sync bottom bar com pager
+            val currentRoute by remember {
+                derivedStateOf { pages[pagerState.currentPage] }
+            }
 
             MaterialTheme {
                 Scaffold(
@@ -50,42 +58,29 @@ class MainActivity : ComponentActivity() {
                             currentRoute = currentRoute,
                             colors = colors,
                             onNavigate = { route ->
-                                currentRoute = route
-                                navController.navigate(route.route) {
-                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
+                                val idx = pages.indexOf(route)
+                                scope.launch { pagerState.animateScrollToPage(idx) }
                             },
                         )
                     },
                 ) { padding ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = NavRoute.HOME.route,
+                    HorizontalPager(
+                        state = pagerState,
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(padding)
                             .background(colors.background),
-                    ) {
-                        composable(NavRoute.HOME.route) {
-                            HomeScreen(
+                        beyondViewportPageCount = 1,
+                    ) { page ->
+                        when (pages[page]) {
+                            NavRoute.OPERATIONAL -> OperationalScreen(colors = colors)
+                            NavRoute.HOME -> HomeScreen(
                                 colors = colors,
                                 onNavigateCommercial = {
-                                    currentRoute = NavRoute.COMMERCIAL
-                                    navController.navigate(NavRoute.COMMERCIAL.route) {
-                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
+                                    scope.launch { pagerState.animateScrollToPage(2) }
                                 },
                             )
-                        }
-                        composable(NavRoute.COMMERCIAL.route) {
-                            DashboardScreen()
-                        }
-                        composable(NavRoute.OPERATIONAL.route) {
-                            OperationalScreen(colors = colors)
+                            NavRoute.COMMERCIAL -> DashboardScreen()
                         }
                     }
                 }

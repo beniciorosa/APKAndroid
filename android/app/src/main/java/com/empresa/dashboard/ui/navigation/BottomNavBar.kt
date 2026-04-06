@@ -41,10 +41,10 @@ fun BottomNavBar(
                 val isHome = route == NavRoute.HOME
 
                 if (isHome) {
-                    // Home button — centralizado, maior, com fundo
+                    // Home button — centralizado, maior, com fundo circular
                     Box(
                         modifier = Modifier
-                            .size(56.dp)
+                            .size(60.dp)
                             .clip(CircleShape)
                             .background(
                                 if (isSelected) colors.onBackground
@@ -57,11 +57,11 @@ fun BottomNavBar(
                             route.icon,
                             contentDescription = route.label,
                             tint = if (isSelected) colors.background else colors.muted,
-                            modifier = Modifier.size(28.dp),
+                            modifier = Modifier.size(32.dp),
                         )
                     }
                 } else {
-                    // Abas laterais — menores
+                    // Abas laterais — menores que Home
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
@@ -73,12 +73,12 @@ fun BottomNavBar(
                             route.icon,
                             contentDescription = route.label,
                             tint = if (isSelected) colors.onBackground else colors.muted,
-                            modifier = Modifier.size(22.dp),
+                            modifier = Modifier.size(20.dp),
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
                             route.label,
-                            fontSize = 10.sp,
+                            fontSize = 9.sp,
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                             color = if (isSelected) colors.onBackground else colors.muted,
                         )

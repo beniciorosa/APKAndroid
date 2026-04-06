@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.empresa.dashboard.R
+import com.empresa.dashboard.data.models.ProductDto
 import com.empresa.dashboard.data.models.SellerDto
 import com.empresa.dashboard.ui.components.CustomDateRangePicker
 import com.empresa.dashboard.ui.model.Period
@@ -45,6 +46,7 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
     val colors = palette(currentTheme)
     var showDatePicker by remember { mutableStateOf(false) }
     var showThemeSheet by remember { mutableStateOf(false) }
+    var showProducts by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = colors.background,
@@ -107,6 +109,10 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
                 isLoading = state.isLoading,
                 colors = colors,
                 theme = currentTheme,
+                onClick = {
+                    viewModel.loadProducts()
+                    showProducts = true
+                },
             )
 
             state.error?.let { err -> ErrorCard(err, colors) }
@@ -136,6 +142,14 @@ fun DashboardScreen(viewModel: DashboardViewModel = hiltViewModel()) {
                     to.toString(),
                 )
             },
+        )
+    }
+
+    if (showProducts) {
+        ProductsSheet(
+            state = state,
+            colors = colors,
+            onDismiss = { showProducts = false },
         )
     }
 
@@ -195,11 +209,13 @@ private fun TotalCard(
     isLoading: Boolean,
     colors: ThemePalette,
     theme: AppTheme,
+    onClick: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
+            .clickable(onClick = onClick)
             .background(
                 Brush.linearGradient(listOf(colors.primaryGradientStart, colors.primaryGradientEnd))
             )
@@ -377,6 +393,135 @@ private fun ThemePickerSheet(
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProductsSheet(
+    state: DashboardUiState,
+    colors: ThemePalette,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = colors.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp),
+        ) {
+            Text(
+                "PRODUTOS VENDIDOS",
+                color = colors.muted,
+                fontSize = 10.sp,
+                letterSpacing = 1.5.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                state.periodLabel,
+                color = colors.onBackground,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(16.dp))
+
+            if (state.isLoadingProducts) {
+                Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = colors.onBackground, strokeWidth = 2.5.dp)
+                }
+            } else if (state.productsError != null) {
+                Text("Erro: ${state.productsError}", color = Color(0xFFEF4444), fontSize = 13.sp)
+            } else if (state.products.isEmpty()) {
+                Text("Nenhum produto encontrado no período.", color = colors.muted, fontSize = 14.sp)
+            } else {
+                val maxValue = state.products.maxOfOrNull { it.total } ?: 1.0
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    state.products.forEachIndexed { idx, product ->
+                        ProductRow(product, maxValue, idx + 1, colors)
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(colors.card)
+                        .padding(16.dp),
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text("Total", color = colors.muted, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        Text(
+                            CurrencyFormatter.format(state.productsTotal),
+                            color = colors.onBackground,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProductRow(product: ProductDto, maxValue: Double, rank: Int, colors: ThemePalette) {
+    val progress = if (maxValue > 0) (product.total / maxValue).toFloat() else 0f
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.card)
+            .padding(16.dp),
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Text(
+                        "#$rank",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = colors.muted,
+                        modifier = Modifier.width(28.dp),
+                    )
+                    Text(
+                        product.name,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = colors.onSurface,
+                    )
+                }
+                Text(
+                    CurrencyFormatter.format(product.total),
+                    fontWeight = FontWeight.Bold,
+                    color = colors.onBackground,
+                    fontSize = 14.sp,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
+                color = colors.onBackground,
+                trackColor = colors.surface,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "${product.quantity} ${if (product.quantity == 1) "unidade" else "unidades"}",
+                fontSize = 11.sp,
+                color = colors.muted,
+            )
         }
     }
 }

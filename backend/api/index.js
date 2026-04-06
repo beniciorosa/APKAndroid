@@ -3,7 +3,7 @@
 const express = require('express');
 const cors = require('cors');
 const { resolvePeriod } = require('../src/utils/dateRanges');
-const { getRevenue, listPipelines, countAllDeals, diagOwners } = require('../src/hubspot');
+const { getRevenue, getRevenueByProduct, listPipelines, countAllDeals, diagOwners } = require('../src/hubspot');
 
 const app = express();
 const CURRENCY = process.env.CURRENCY || 'BRL';
@@ -68,6 +68,29 @@ app.get('/api/revenue/by-seller', async (req, res) => {
 });
 
 // Diagnóstico: lista pipelines e stages
+// Faturamento por produto
+app.get('/api/revenue/by-product', async (req, res) => {
+  try {
+    const { period = 'this-month', from, to } = req.query;
+    const range = resolvePeriod(period, from, to);
+    const data = await getRevenueByProduct(range);
+    res.json({
+      ...data,
+      currency: CURRENCY,
+      period: {
+        key: period,
+        label: range.label,
+        from: range.from.toISOString(),
+        to: range.to.toISOString(),
+      },
+    });
+  } catch (err) {
+    console.error('[/api/revenue/by-product]', err.message);
+    const status = err.response?.status || 400;
+    res.status(status).json({ error: err.message });
+  }
+});
+
 app.get('/api/diag/pipelines', async (req, res) => {
   try {
     const pipelines = await listPipelines();

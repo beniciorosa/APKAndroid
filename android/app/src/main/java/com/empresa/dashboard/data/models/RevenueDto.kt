@@ -22,6 +22,23 @@ data class SellerDto(
 )
 
 @JsonClass(generateAdapter = true)
+data class ProductResponse(
+    val total: Double,
+    val currency: String,
+    val dealCount: Int,
+    val products: List<ProductDto>,
+    val period: PeriodDto,
+    val updatedAt: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class ProductDto(
+    val name: String,
+    val total: Double,
+    val quantity: Int,
+)
+
+@JsonClass(generateAdapter = true)
 data class PeriodDto(
     val key: String,
     val label: String,

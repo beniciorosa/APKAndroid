@@ -3,6 +3,7 @@ package com.empresa.dashboard.ui.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.empresa.dashboard.data.RevenueRepository
+import com.empresa.dashboard.data.models.ProductDto
 import com.empresa.dashboard.data.models.SellerDto
 import com.empresa.dashboard.ui.model.Period
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,7 +19,7 @@ import java.util.TimeZone
 import javax.inject.Inject
 
 data class DashboardUiState(
-    val period: Period = Period.THIS_MONTH,
+    val period: Period = Period.TODAY,
     val customFrom: String? = null,
     val customTo: String? = null,
     val total: Double = 0.0,
@@ -28,6 +29,10 @@ data class DashboardUiState(
     val updatedAt: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
+    val products: List<ProductDto> = emptyList(),
+    val productsTotal: Double = 0.0,
+    val isLoadingProducts: Boolean = false,
+    val productsError: String? = null,
 )
 
 @HiltViewModel
@@ -71,6 +76,32 @@ class DashboardViewModel @Inject constructor(
             }.onFailure { t ->
                 _state.update {
                     it.copy(isLoading = false, error = t.message ?: "Erro ao carregar dados")
+                }
+            }
+        }
+    }
+
+    fun loadProducts() {
+        val current = _state.value
+        _state.update { it.copy(isLoadingProducts = true, productsError = null) }
+        viewModelScope.launch {
+            val result = repo.getRevenueByProduct(
+                period = current.period.apiKey,
+                from = current.customFrom,
+                to = current.customTo,
+            )
+            result.onSuccess { resp ->
+                _state.update {
+                    it.copy(
+                        isLoadingProducts = false,
+                        products = resp.products,
+                        productsTotal = resp.total,
+                        productsError = null,
+                    )
+                }
+            }.onFailure { t ->
+                _state.update {
+                    it.copy(isLoadingProducts = false, productsError = t.message ?: "Erro")
                 }
             }
         }

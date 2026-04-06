@@ -150,6 +150,117 @@ async function getRevenue(period) {
   };
 }
 
+// Busca line_items de um batch de deal IDs
+async function getLineItemsForDeals(dealIds) {
+  const lineItems = [];
+  // Processar em batches de 50 (limite da API de associations)
+  const batchSize = 50;
+  for (let i = 0; i < dealIds.length; i += batchSize) {
+    const batch = dealIds.slice(i, i + batchSize);
+    const body = {
+      inputs: batch.map((id) => ({ id })),
+    };
+    try {
+      const { data } = await axios.post(
+        `${HUBSPOT_BASE}/crm/v4/associations/deals/line_items/batch/read`,
+        body,
+        { headers: authHeaders() }
+      );
+      for (const result of data.results) {
+        for (const assoc of result.to) {
+          lineItems.push({ dealId: result.from.id, lineItemId: assoc.toObjectId });
+        }
+      }
+    } catch (err) {
+      console.error('[getLineItemsForDeals] batch error:', err.response?.status, err.message);
+    }
+  }
+  return lineItems;
+}
+
+// Busca propriedades dos line_items por IDs
+async function fetchLineItemDetails(lineItemIds) {
+  const items = [];
+  const batchSize = 100;
+  for (let i = 0; i < lineItemIds.length; i += batchSize) {
+    const batch = lineItemIds.slice(i, i + batchSize);
+    const body = {
+      inputs: batch.map((id) => ({ id: String(id) })),
+      properties: ['name', 'amount', 'quantity', 'price', 'hs_product_id'],
+    };
+    try {
+      const { data } = await axios.post(
+        `${HUBSPOT_BASE}/crm/v3/objects/line_items/batch/read`,
+        body,
+        { headers: authHeaders() }
+      );
+      items.push(...data.results);
+    } catch (err) {
+      console.error('[fetchLineItemDetails] error:', err.response?.status, err.message);
+    }
+  }
+  return items;
+}
+
+// Agrega line_items por nome de produto
+async function getRevenueByProduct(period) {
+  const cacheKey = `products:${period.from.getTime()}:${period.to.getTime()}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
+
+  const deals = await searchClosedWonDeals(period.from, period.to);
+  const dealIds = deals.map((d) => d.id);
+
+  if (dealIds.length === 0) {
+    return { products: [], total: 0, dealCount: 0, updatedAt: new Date().toISOString() };
+  }
+
+  // 1. Buscar associations deal → line_items
+  const associations = await getLineItemsForDeals(dealIds);
+  const lineItemIds = [...new Set(associations.map((a) => a.lineItemId))];
+
+  if (lineItemIds.length === 0) {
+    // Sem line items — usar dealname como "produto"
+    const byName = new Map();
+    let total = 0;
+    for (const deal of deals) {
+      const name = deal.properties.dealname || 'Sem nome';
+      const amount = parseFloat(deal.properties.amount || '0') || 0;
+      total += amount;
+      if (!byName.has(name)) byName.set(name, { name, total: 0, quantity: 0 });
+      const p = byName.get(name);
+      p.total += amount;
+      p.quantity += 1;
+    }
+    const products = [...byName.values()].sort((a, b) => b.total - a.total);
+    const result = { products, total, dealCount: deals.length, updatedAt: new Date().toISOString() };
+    cache.set(cacheKey, result, 5 * 60 * 1000);
+    return result;
+  }
+
+  // 2. Buscar detalhes dos line_items
+  const lineItems = await fetchLineItemDetails(lineItemIds);
+
+  // 3. Agregar por nome de produto
+  const byProduct = new Map();
+  let total = 0;
+  for (const item of lineItems) {
+    const name = item.properties.name || 'Sem nome';
+    const amount = parseFloat(item.properties.amount || '0') || 0;
+    const qty = parseInt(item.properties.quantity || '1', 10) || 1;
+    total += amount;
+    if (!byProduct.has(name)) byProduct.set(name, { name, total: 0, quantity: 0 });
+    const p = byProduct.get(name);
+    p.total += amount;
+    p.quantity += qty;
+  }
+
+  const products = [...byProduct.values()].sort((a, b) => b.total - a.total);
+  const result = { products, total, dealCount: deals.length, updatedAt: new Date().toISOString() };
+  cache.set(cacheKey, result, 5 * 60 * 1000);
+  return result;
+}
+
 // Diagnóstico: lista pipelines e stages
 async function listPipelines() {
   const { data } = await axios.get(
@@ -217,4 +328,4 @@ async function diagOwners() {
   }
 }
 
-module.exports = { getRevenue, listPipelines, countAllDeals, diagOwners };
+module.exports = { getRevenue, getRevenueByProduct, listPipelines, countAllDeals, diagOwners };

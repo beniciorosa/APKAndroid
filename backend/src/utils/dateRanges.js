@@ -16,6 +16,12 @@ function endOfDay(d) {
 function resolvePeriod(period, fromStr, toStr) {
   const now = new Date();
 
+  if (period === 'today') {
+    const from = startOfDay(now);
+    const to = now;
+    return { from, to, label: 'Hoje' };
+  }
+
   if (period === 'this-month') {
     const from = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
     const to = now;
@@ -43,7 +49,7 @@ function resolvePeriod(period, fromStr, toStr) {
     return { from, to, label: `${fromStr} a ${toStr}` };
   }
 
-  throw new Error(`período inválido: ${period}. Use this-month | last-30-days | custom`);
+  throw new Error(`período inválido: ${period}. Use today | this-month | last-30-days | custom`);
 }
 
 module.exports = { resolvePeriod };

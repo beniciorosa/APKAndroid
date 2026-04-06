@@ -11,7 +11,7 @@ enum class NavRoute(
     val label: String,
     val icon: ImageVector,
 ) {
-    OPERATIONAL("operational", "Operacional", Icons.Outlined.Assignment),
-    HOME("home", "Home", Icons.Filled.Home),
     COMMERCIAL("commercial", "Comercial", Icons.Filled.TrendingUp),
+    HOME("home", "Home", Icons.Filled.Home),
+    OPERATIONAL("operational", "Operacional", Icons.Outlined.Assignment),
 }

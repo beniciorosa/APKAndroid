@@ -75,14 +75,14 @@ class MainActivity : ComponentActivity() {
                         beyondViewportPageCount = 2,
                     ) { page ->
                         when (pages[page]) {
-                            NavRoute.OPERATIONAL -> OperationalScreen(colors = colors)
+                            NavRoute.COMMERCIAL -> DashboardScreen()
                             NavRoute.HOME -> HomeScreen(
                                 colors = colors,
                                 onNavigateCommercial = {
-                                    scope.launch { pagerState.scrollToPage(2) }
+                                    scope.launch { pagerState.scrollToPage(0) }
                                 },
                             )
-                            NavRoute.COMMERCIAL -> DashboardScreen()
+                            NavRoute.OPERATIONAL -> OperationalScreen(colors = colors)
                         }
                     }
                 }

@@ -83,11 +83,11 @@ fun HomeScreen(
             onClick = onNavigateCommercial,
         )
 
-        // Card faturamento MÊS
+        // Card faturamento 30 DIAS
         MetricCard(
-            label = "FATURAMENTO DO MÊS",
-            value = if (state.isLoading) "..." else CurrencyFormatter.format(state.monthTotal),
-            subtitle = "${state.monthDeals} negócios ganhos",
+            label = "ÚLTIMOS 30 DIAS",
+            value = if (state.isLoading) "..." else CurrencyFormatter.format(state.last30Total),
+            subtitle = "${state.last30Deals} negócios ganhos",
             colors = colors,
             gradientStart = colors.card,
             gradientEnd = colors.card,

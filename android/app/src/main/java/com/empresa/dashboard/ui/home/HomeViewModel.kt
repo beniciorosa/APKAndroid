@@ -14,8 +14,8 @@ import javax.inject.Inject
 data class HomeUiState(
     val todayTotal: Double = 0.0,
     val todayDeals: Int = 0,
-    val monthTotal: Double = 0.0,
-    val monthDeals: Int = 0,
+    val last30Total: Double = 0.0,
+    val last30Deals: Int = 0,
     val isLoading: Boolean = false,
     val error: String? = null,
 )
@@ -33,17 +33,17 @@ class HomeViewModel @Inject constructor(
     fun refresh() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
-            // Hoje e Este mês em paralelo
+            // Hoje e Últimos 30 dias em paralelo
             val todayResult = repo.getRevenue("today")
-            val monthResult = repo.getRevenue("this-month")
+            val last30Result = repo.getRevenue("last-30-days")
 
             todayResult.onSuccess { r ->
                 _state.update { it.copy(todayTotal = r.total, todayDeals = r.dealCount) }
             }
-            monthResult.onSuccess { r ->
-                _state.update { it.copy(monthTotal = r.total, monthDeals = r.dealCount) }
+            last30Result.onSuccess { r ->
+                _state.update { it.copy(last30Total = r.total, last30Deals = r.dealCount) }
             }
-            val err = todayResult.exceptionOrNull() ?: monthResult.exceptionOrNull()
+            val err = todayResult.exceptionOrNull() ?: last30Result.exceptionOrNull()
             _state.update { it.copy(isLoading = false, error = err?.message) }
         }
     }

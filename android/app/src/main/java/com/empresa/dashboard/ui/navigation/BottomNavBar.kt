@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -19,9 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.empresa.dashboard.R
 import com.empresa.dashboard.ui.theme.ThemePalette
 
@@ -36,44 +33,54 @@ fun BottomNavBar(
             .fillMaxWidth()
             .background(colors.background)
             .navigationBarsPadding()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = 24.dp)
             .padding(bottom = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(68.dp)
+                .height(64.dp)
                 .clip(RoundedCornerShape(32.dp))
-                .background(colors.surface)
-                .padding(horizontal = 8.dp),
+                .background(colors.surface),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            NavRoute.values().forEach { route ->
-                val isSelected = route == currentRoute
-                val isHome = route == NavRoute.HOME
+            // Operacional
+            NavIcon(
+                route = NavRoute.OPERATIONAL,
+                isSelected = currentRoute == NavRoute.OPERATIONAL,
+                colors = colors,
+                onClick = { onNavigate(NavRoute.OPERATIONAL) },
+            )
 
-                if (isHome) {
-                    HomeButton(isSelected, colors) { onNavigate(route) }
-                } else {
-                    SideTab(route, isSelected, colors) { onNavigate(route) }
-                }
-            }
+            // Home — logo Escalada com círculo degradê
+            HomeIcon(
+                isSelected = currentRoute == NavRoute.HOME,
+                colors = colors,
+                onClick = { onNavigate(NavRoute.HOME) },
+            )
+
+            // Comercial
+            NavIcon(
+                route = NavRoute.COMMERCIAL,
+                isSelected = currentRoute == NavRoute.COMMERCIAL,
+                colors = colors,
+                onClick = { onNavigate(NavRoute.COMMERCIAL) },
+            )
         }
     }
 }
 
 @Composable
-private fun HomeButton(
+private fun HomeIcon(
     isSelected: Boolean,
     colors: ThemePalette,
     onClick: () -> Unit,
 ) {
-    // Tamanho fixo sempre
     Box(
         modifier = Modifier
-            .size(52.dp)
+            .size(48.dp)
             .clip(CircleShape)
             .background(
                 Brush.linearGradient(
@@ -90,7 +97,7 @@ private fun HomeButton(
         Image(
             painter = painterResource(R.drawable.escalada_mark),
             contentDescription = "Home",
-            modifier = Modifier.size(26.dp),
+            modifier = Modifier.size(24.dp),
             colorFilter = ColorFilter.tint(
                 if (isSelected) colors.background else colors.background.copy(alpha = 0.5f)
             ),
@@ -99,51 +106,29 @@ private fun HomeButton(
 }
 
 @Composable
-private fun SideTab(
+private fun NavIcon(
     route: NavRoute,
     isSelected: Boolean,
     colors: ThemePalette,
     onClick: () -> Unit,
 ) {
-    // Tamanho fixo: mesma largura e altura sempre
-    Column(
+    Box(
         modifier = Modifier
-            .width(80.dp)
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(if (isSelected) colors.card else Color.Transparent)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick,
             ),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             route.icon,
             contentDescription = route.label,
             tint = if (isSelected) colors.onBackground else colors.muted,
-            modifier = Modifier.size(22.dp),
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            route.label,
-            fontSize = 10.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) colors.onBackground else colors.muted,
-        )
-        Spacer(Modifier.height(5.dp))
-        // Indicador — sempre ocupa espaço, muda visibilidade
-        Box(
-            modifier = Modifier
-                .width(20.dp)
-                .height(3.dp)
-                .clip(RoundedCornerShape(1.5.dp))
-                .background(
-                    if (isSelected) Brush.linearGradient(
-                        listOf(colors.accentGradientStart, colors.accentGradientEnd)
-                    )
-                    else Brush.linearGradient(
-                        listOf(Color.Transparent, Color.Transparent)
-                    )
-                ),
+            modifier = Modifier.size(24.dp),
         )
     }
 }

@@ -3,6 +3,7 @@ package com.empresa.dashboard.ui.navigation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -27,7 +28,8 @@ fun BottomNavBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(colors.surface)
-            .padding(top = 8.dp, bottom = 16.dp),
+            .navigationBarsPadding()
+            .padding(top = 8.dp, bottom = 8.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),

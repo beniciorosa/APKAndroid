@@ -27,7 +27,7 @@ object WidgetPrefs {
 
     suspend fun readPeriod(ctx: Context, widgetId: Int): Triple<String, String?, String?> {
         val prefs = ctx.dataStore.data.first()
-        val period = prefs[periodKey(widgetId)] ?: "this-month"
+        val period = prefs[periodKey(widgetId)] ?: "last-30-days"
         val from = prefs[fromKey(widgetId)]
         val to = prefs[toKey(widgetId)]
         return Triple(period, from, to)

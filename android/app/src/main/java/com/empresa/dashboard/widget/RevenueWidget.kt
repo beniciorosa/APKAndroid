@@ -47,7 +47,6 @@ class RevenueWidget : GlanceAppWidget() {
         val (period, from, to) = WidgetPrefs.readPeriod(context, appWidgetId)
         val theme = WidgetPrefs.readTheme(context, appWidgetId)
 
-        // Tentar buscar dados frescos
         val revenue = WidgetApi.fetchRevenue(period, from, to)
 
         val total: String
@@ -70,33 +69,39 @@ class RevenueWidget : GlanceAppWidget() {
     }
 
     private data class WColors(
-        val bg: Color,
+        val bgStart: Color,
+        val bgEnd: Color,
         val chipActive: Color,
         val chipInactive: Color,
         val textOnActive: Color,
         val textOnInactive: Color,
         val textMain: Color,
+        val textSub: Color,
         val textMuted: Color,
     )
 
     private fun darkColors() = WColors(
-        bg = Color(0xFF0A0A0A),
+        bgStart = Color(0xFF111111),
+        bgEnd = Color(0xFF1A1A1A),
         chipActive = Color.White,
-        chipInactive = Color(0xFF1E1E1E),
+        chipInactive = Color(0xFF252525),
         textOnActive = Color.Black,
-        textOnInactive = Color(0xAAFFFFFF),
+        textOnInactive = Color(0xBBFFFFFF),
         textMain = Color.White,
-        textMuted = Color(0x66FFFFFF),
+        textSub = Color(0xCCFFFFFF),
+        textMuted = Color(0x77FFFFFF),
     )
 
     private fun blueColors() = WColors(
-        bg = Color(0xFF1E3A8A),
+        bgStart = Color(0xFF1E3A8A),
+        bgEnd = Color(0xFF2D52B0),
         chipActive = Color.White,
-        chipInactive = Color(0xFF2D4EA0),
+        chipInactive = Color(0xFF2A4699),
         textOnActive = Color(0xFF1E3A8A),
         textOnInactive = Color(0xCCFFFFFF),
         textMain = Color.White,
-        textMuted = Color(0x88FFFFFF),
+        textSub = Color(0xDDFFFFFF),
+        textMuted = Color(0x99FFFFFF),
     )
 
     @Composable
@@ -108,64 +113,64 @@ class RevenueWidget : GlanceAppWidget() {
         widgetId: Int,
         c: WColors,
     ) {
+        // Glance não suporta Brush/gradient no background, usar cor sólida
         GlanceTheme {
             Column(
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .cornerRadius(24.dp)
-                    .background(ColorProvider(c.bg))
-                    .padding(24.dp)
-                    .clickable(actionStartActivity<MainActivity>()),
+                    .background(ColorProvider(c.bgStart))
+                    .clickable(actionStartActivity<MainActivity>())
+                    .padding(20.dp),
             ) {
-                // Logo
+                // Topo: logo + atualizado
                 Row(
                     modifier = GlanceModifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Image(
                         provider = ImageProvider(R.drawable.escalada_mark),
-                        contentDescription = "Escalada",
-                        modifier = GlanceModifier.size(26.dp),
-                        colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(c.textMain)),
+                        contentDescription = null,
+                        modifier = GlanceModifier.size(20.dp),
+                        colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(c.textSub)),
                     )
-                    Spacer(GlanceModifier.width(10.dp))
+                    Spacer(GlanceModifier.width(8.dp))
                     Text(
                         "ESCALADA",
                         style = TextStyle(
-                            color = ColorProvider(c.textMain.copy(alpha = 0.7f)),
-                            fontSize = 13.sp,
+                            color = ColorProvider(c.textSub),
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                         ),
                     )
+                    Spacer(GlanceModifier.defaultWeight())
+                    if (updatedAt.isNotEmpty()) {
+                        Text(
+                            updatedAt,
+                            style = TextStyle(
+                                color = ColorProvider(c.textMuted),
+                                fontSize = 10.sp,
+                            ),
+                        )
+                    }
                 }
 
-                Spacer(GlanceModifier.height(20.dp))
+                // Espaço flexível pra centralizar o valor
+                Spacer(GlanceModifier.defaultWeight())
 
-                // Valor grande
+                // Valor centralizado
                 Text(
                     total,
                     style = TextStyle(
                         color = ColorProvider(c.textMain),
-                        fontSize = 38.sp,
+                        fontSize = 36.sp,
                         fontWeight = FontWeight.Bold,
                     ),
                 )
 
-                Spacer(GlanceModifier.height(8.dp))
-
-                if (updatedAt.isNotEmpty()) {
-                    Text(
-                        "Atualizado $updatedAt",
-                        style = TextStyle(
-                            color = ColorProvider(c.textMuted),
-                            fontSize = 11.sp,
-                        ),
-                    )
-                }
-
                 Spacer(GlanceModifier.defaultWeight())
 
-                // Botões de período — grandes
+                // Botões na base
                 Row(
                     modifier = GlanceModifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -197,7 +202,7 @@ class RevenueWidget : GlanceAppWidget() {
                 .cornerRadius(14.dp)
                 .background(ColorProvider(if (isActive) c.chipActive else c.chipInactive))
                 .clickable(actionSendBroadcast(intent))
-                .padding(horizontal = 18.dp, vertical = 10.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(

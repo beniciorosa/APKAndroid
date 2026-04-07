@@ -16,7 +16,8 @@
       "Bash(curl -s -m 60 \"https://apk-android.vercel.app/api/revenue/by-product?period=this-month\")",
       "Bash(curl -s -m 60 \"https://apk-android.vercel.app/api/revenue/by-product?period=last-30-days\")",
       "Bash(curl -s -m 60 \"https://apk-android.vercel.app/api/revenue/by-product?period=today\")",
-      "Bash(curl -s -m 60 \"https://apk-android.vercel.app/api/revenue/by-product?period=custom&from=2026-03-01&to=2026-03-31\")"
+      "Bash(curl -s -m 60 \"https://apk-android.vercel.app/api/revenue/by-product?period=custom&from=2026-03-01&to=2026-03-31\")",
+      "Bash(curl -s -m 30 \"https://apk-android.vercel.app/api/revenue?period=today\")"
     ]
   }
 }

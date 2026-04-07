@@ -23,6 +23,8 @@ import com.empresa.dashboard.ui.operational.OperationalScreen
 import com.empresa.dashboard.ui.theme.AppTheme
 import com.empresa.dashboard.ui.theme.ThemePrefs
 import com.empresa.dashboard.ui.theme.palette
+import androidx.glance.appwidget.updateAll
+import com.empresa.dashboard.widget.RevenueWidget
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -34,6 +36,11 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
+        // Atualizar widgets ao abrir o app
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try { RevenueWidget().updateAll(this@MainActivity) } catch (_: Exception) {}
+        }
+
         setContent {
             val ctx = LocalContext.current
             val currentTheme by ThemePrefs.flow(ctx).collectAsState(initial = AppTheme.MONO)

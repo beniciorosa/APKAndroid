@@ -14,12 +14,10 @@ import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.glance.appwidget.action.actionSendBroadcast
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
-import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
@@ -44,86 +42,69 @@ class RevenueWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
-        val (period, from, to) = WidgetPrefs.readPeriod(context, appWidgetId)
         val theme = WidgetPrefs.readTheme(context, appWidgetId)
 
-        val revenue = WidgetApi.fetchRevenue(period, from, to)
+        // Buscar os 3 períodos
+        val today = WidgetApi.fetchRevenue("today")
+        val month = WidgetApi.fetchRevenue("this-month")
+        val days30 = WidgetApi.fetchRevenue("last-30-days")
 
-        val total: String
-        val updatedAt: String
+        val todayVal = today?.let { CurrencyFormatter.format(it.total) } ?: "—"
+        val monthVal = month?.let { CurrencyFormatter.format(it.total) } ?: "—"
+        val days30Val = days30?.let { CurrencyFormatter.format(it.total) } ?: "—"
+        val updatedAt = SimpleDateFormat("dd/MM HH:mm", Locale("pt", "BR")).format(Date())
 
-        if (revenue != null) {
-            total = CurrencyFormatter.format(revenue.total)
-            updatedAt = SimpleDateFormat("dd/MM HH:mm", Locale("pt", "BR")).format(Date())
-            WidgetPrefs.saveData(context, appWidgetId, total, revenue.label, updatedAt)
-        } else {
-            val cached = WidgetPrefs.readData(context, appWidgetId)
-            total = cached.total ?: "R$ —"
-            updatedAt = cached.updatedAt ?: ""
-        }
+        // Salvar cache
+        WidgetPrefs.saveData(context, appWidgetId, days30Val, "Últimos 30 dias", updatedAt)
 
         provideContent {
             val c = if (theme == "blue") blueColors() else darkColors()
-            WidgetLayout(context, total, updatedAt, period, appWidgetId, c)
+            WidgetLayout(todayVal, monthVal, days30Val, updatedAt, c)
         }
     }
 
     private data class WColors(
-        val bgStart: Color,
-        val bgEnd: Color,
-        val chipActive: Color,
-        val chipInactive: Color,
-        val textOnActive: Color,
-        val textOnInactive: Color,
+        val bg: Color,
+        val card: Color,
         val textMain: Color,
-        val textSub: Color,
+        val textLabel: Color,
         val textMuted: Color,
     )
 
     private fun darkColors() = WColors(
-        bgStart = Color(0xFF111111),
-        bgEnd = Color(0xFF1A1A1A),
-        chipActive = Color.White,
-        chipInactive = Color(0xFF252525),
-        textOnActive = Color.Black,
-        textOnInactive = Color(0xBBFFFFFF),
+        bg = Color(0xFF0A0A0A),
+        card = Color(0xFF1A1A1A),
         textMain = Color.White,
-        textSub = Color(0xCCFFFFFF),
-        textMuted = Color(0x77FFFFFF),
+        textLabel = Color(0xAAFFFFFF),
+        textMuted = Color(0x66FFFFFF),
     )
 
     private fun blueColors() = WColors(
-        bgStart = Color(0xFF1E3A8A),
-        bgEnd = Color(0xFF2D52B0),
-        chipActive = Color.White,
-        chipInactive = Color(0xFF2A4699),
-        textOnActive = Color(0xFF1E3A8A),
-        textOnInactive = Color(0xCCFFFFFF),
+        bg = Color(0xFF1E3A8A),
+        card = Color(0xFF264FAD),
         textMain = Color.White,
-        textSub = Color(0xDDFFFFFF),
-        textMuted = Color(0x99FFFFFF),
+        textLabel = Color(0xCCFFFFFF),
+        textMuted = Color(0x88FFFFFF),
     )
 
     @Composable
     private fun WidgetLayout(
-        context: Context,
-        total: String,
+        todayVal: String,
+        monthVal: String,
+        days30Val: String,
         updatedAt: String,
-        period: String,
-        widgetId: Int,
         c: WColors,
     ) {
-        // Glance não suporta Brush/gradient no background, usar cor sólida
         GlanceTheme {
             Column(
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .cornerRadius(24.dp)
-                    .background(ColorProvider(c.bgStart))
+                    .background(ColorProvider(c.bg))
                     .clickable(actionStartActivity<MainActivity>())
-                    .padding(20.dp),
+                    .padding(16.dp),
             ) {
-                // Topo: logo + atualizado
+                // Header: logo + timestamp
                 Row(
                     modifier = GlanceModifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -131,88 +112,95 @@ class RevenueWidget : GlanceAppWidget() {
                     Image(
                         provider = ImageProvider(R.drawable.escalada_mark),
                         contentDescription = null,
-                        modifier = GlanceModifier.size(20.dp),
-                        colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(c.textSub)),
+                        modifier = GlanceModifier.size(18.dp),
+                        colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(c.textLabel)),
                     )
-                    Spacer(GlanceModifier.width(8.dp))
+                    Spacer(GlanceModifier.width(6.dp))
                     Text(
                         "ESCALADA",
                         style = TextStyle(
-                            color = ColorProvider(c.textSub),
-                            fontSize = 12.sp,
+                            color = ColorProvider(c.textLabel),
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                         ),
                     )
                     Spacer(GlanceModifier.defaultWeight())
-                    if (updatedAt.isNotEmpty()) {
-                        Text(
-                            updatedAt,
-                            style = TextStyle(
-                                color = ColorProvider(c.textMuted),
-                                fontSize = 10.sp,
-                            ),
-                        )
-                    }
+                    Text(
+                        updatedAt,
+                        style = TextStyle(
+                            color = ColorProvider(c.textMuted),
+                            fontSize = 9.sp,
+                        ),
+                    )
                 }
 
-                // Espaço flexível pra centralizar o valor
-                Spacer(GlanceModifier.defaultWeight())
+                Spacer(GlanceModifier.height(14.dp))
 
-                // Valor centralizado
+                // HOJE — valor grande, destaque
                 Text(
-                    total,
+                    "HOJE",
+                    style = TextStyle(
+                        color = ColorProvider(c.textLabel),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                )
+                Spacer(GlanceModifier.height(2.dp))
+                Text(
+                    todayVal,
                     style = TextStyle(
                         color = ColorProvider(c.textMain),
-                        fontSize = 36.sp,
+                        fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                     ),
                 )
 
                 Spacer(GlanceModifier.defaultWeight())
 
-                // Botões na base
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    PeriodChip(context, "Hoje", "today", period, widgetId, c)
-                    Spacer(GlanceModifier.width(8.dp))
-                    PeriodChip(context, "Mês", "this-month", period, widgetId, c)
-                    Spacer(GlanceModifier.width(8.dp))
-                    PeriodChip(context, "30D", "last-30-days", period, widgetId, c)
+                // Mês e 30D lado a lado
+                Row(modifier = GlanceModifier.fillMaxWidth()) {
+                    // Este mês
+                    Column(modifier = GlanceModifier.defaultWeight()) {
+                        Text(
+                            "ESTE MÊS",
+                            style = TextStyle(
+                                color = ColorProvider(c.textMuted),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                        )
+                        Spacer(GlanceModifier.height(2.dp))
+                        Text(
+                            monthVal,
+                            style = TextStyle(
+                                color = ColorProvider(c.textMain),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                            ),
+                        )
+                    }
+                    // 30 dias
+                    Column(modifier = GlanceModifier.defaultWeight()) {
+                        Text(
+                            "30 DIAS",
+                            style = TextStyle(
+                                color = ColorProvider(c.textMuted),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                        )
+                        Spacer(GlanceModifier.height(2.dp))
+                        Text(
+                            days30Val,
+                            style = TextStyle(
+                                color = ColorProvider(c.textMain),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                            ),
+                        )
+                    }
                 }
             }
-        }
-    }
-
-    @Composable
-    private fun PeriodChip(
-        context: Context,
-        label: String,
-        periodKey: String,
-        currentPeriod: String,
-        widgetId: Int,
-        c: WColors,
-    ) {
-        val isActive = currentPeriod == periodKey
-        val intent = ChangePeriodReceiver.createIntent(context, widgetId, periodKey)
-
-        Box(
-            modifier = GlanceModifier
-                .cornerRadius(14.dp)
-                .background(ColorProvider(if (isActive) c.chipActive else c.chipInactive))
-                .clickable(actionSendBroadcast(intent))
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                label,
-                style = TextStyle(
-                    color = ColorProvider(if (isActive) c.textOnActive else c.textOnInactive),
-                    fontSize = 13.sp,
-                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
-                ),
-            )
         }
     }
 }

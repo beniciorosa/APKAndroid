@@ -50,11 +50,23 @@ object WidgetPrefs {
         )
     }
 
+    private fun themeKey(widgetId: Int) = stringPreferencesKey("widget_${widgetId}_theme")
+
+    suspend fun saveTheme(ctx: Context, widgetId: Int, theme: String) {
+        ctx.dataStore.edit { prefs -> prefs[themeKey(widgetId)] = theme }
+    }
+
+    suspend fun readTheme(ctx: Context, widgetId: Int): String {
+        val prefs = ctx.dataStore.data.first()
+        return prefs[themeKey(widgetId)] ?: "dark"
+    }
+
     suspend fun clear(ctx: Context, widgetId: Int) {
         ctx.dataStore.edit { prefs ->
             listOf(
                 periodKey(widgetId), fromKey(widgetId), toKey(widgetId),
-                totalKey(widgetId), labelKey(widgetId), updatedKey(widgetId)
+                totalKey(widgetId), labelKey(widgetId), updatedKey(widgetId),
+                themeKey(widgetId)
             ).forEach { prefs.remove(it) }
         }
     }

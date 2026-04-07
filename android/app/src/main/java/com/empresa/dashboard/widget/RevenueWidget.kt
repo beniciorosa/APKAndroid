@@ -44,11 +44,14 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+private val PERIOD_KEY = ActionParameters.Key<String>("period")
+
 class RevenueWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
         val (period, from, to) = WidgetPrefs.readPeriod(context, appWidgetId)
+        val theme = WidgetPrefs.readTheme(context, appWidgetId)
 
         val revenue = WidgetApi.fetchRevenue(period, from, to)
 
@@ -69,30 +72,56 @@ class RevenueWidget : GlanceAppWidget() {
         }
 
         provideContent {
-            WidgetContent(
-                total = total,
-                label = label,
-                updatedAt = updatedAt,
-                period = period,
-                widgetId = appWidgetId,
-            )
+            if (theme == "blue") {
+                BlueWidget(total, updatedAt, period)
+            } else {
+                DarkWidget(total, updatedAt, period)
+            }
         }
     }
 
     @Composable
-    private fun WidgetContent(
+    private fun DarkWidget(total: String, updatedAt: String, period: String) {
+        val bg = Color(0xFF0A0A0A)
+        val chipActive = Color.White
+        val chipInactive = Color(0xFF1E1E1E)
+        val textOnActive = Color.Black
+        val textOnInactive = Color(0xAAFFFFFF)
+        val logoTint = Color.White
+
+        WidgetLayout(total, updatedAt, period, bg, chipActive, chipInactive, textOnActive, textOnInactive, logoTint)
+    }
+
+    @Composable
+    private fun BlueWidget(total: String, updatedAt: String, period: String) {
+        val bg = Color(0xFF1E3A8A)
+        val chipActive = Color.White
+        val chipInactive = Color(0xFF2D4EA0)
+        val textOnActive = Color(0xFF1E3A8A)
+        val textOnInactive = Color(0xCCFFFFFF)
+        val logoTint = Color.White
+
+        WidgetLayout(total, updatedAt, period, bg, chipActive, chipInactive, textOnActive, textOnInactive, logoTint)
+    }
+
+    @Composable
+    private fun WidgetLayout(
         total: String,
-        label: String,
         updatedAt: String,
         period: String,
-        widgetId: Int,
+        bg: Color,
+        chipActive: Color,
+        chipInactive: Color,
+        textOnActive: Color,
+        textOnInactive: Color,
+        logoTint: Color,
     ) {
         GlanceTheme {
             Column(
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .cornerRadius(24.dp)
-                    .background(ColorProvider(Color(0xFF0A0A0A)))
+                    .background(ColorProvider(bg))
                     .padding(20.dp)
                     .clickable(actionStartActivity<MainActivity>()),
                 verticalAlignment = Alignment.Top,
@@ -107,13 +136,13 @@ class RevenueWidget : GlanceAppWidget() {
                         provider = ImageProvider(R.drawable.escalada_mark),
                         contentDescription = "Escalada",
                         modifier = GlanceModifier.size(22.dp),
-                        colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(Color.White)),
+                        colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(logoTint)),
                     )
                     Spacer(GlanceModifier.width(8.dp))
                     Text(
                         "ESCALADA",
                         style = TextStyle(
-                            color = ColorProvider(Color(0xAAFFFFFF)),
+                            color = ColorProvider(logoTint.copy(alpha = 0.7f)),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                         ),
@@ -122,11 +151,11 @@ class RevenueWidget : GlanceAppWidget() {
 
                 Spacer(GlanceModifier.height(16.dp))
 
-                // Valor grande
+                // Valor
                 Text(
                     total,
                     style = TextStyle(
-                        color = ColorProvider(Color.White),
+                        color = ColorProvider(logoTint),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                     ),
@@ -134,12 +163,11 @@ class RevenueWidget : GlanceAppWidget() {
 
                 Spacer(GlanceModifier.height(8.dp))
 
-                // Timestamp
                 if (updatedAt.isNotEmpty()) {
                     Text(
                         "Atualizado $updatedAt",
                         style = TextStyle(
-                            color = ColorProvider(Color(0x66FFFFFF)),
+                            color = ColorProvider(logoTint.copy(alpha = 0.4f)),
                             fontSize = 10.sp,
                         ),
                     )
@@ -152,32 +180,34 @@ class RevenueWidget : GlanceAppWidget() {
                     modifier = GlanceModifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    PeriodButton("Hoje", "today", period == "today", widgetId)
+                    PeriodChip("Hoje", "today", period, chipActive, chipInactive, textOnActive, textOnInactive)
                     Spacer(GlanceModifier.width(6.dp))
-                    PeriodButton("Mês", "this-month", period == "this-month", widgetId)
+                    PeriodChip("Mês", "this-month", period, chipActive, chipInactive, textOnActive, textOnInactive)
                     Spacer(GlanceModifier.width(6.dp))
-                    PeriodButton("30d", "last-30-days", period == "last-30-days", widgetId)
+                    PeriodChip("30D", "last-30-days", period, chipActive, chipInactive, textOnActive, textOnInactive)
                 }
             }
         }
     }
 
     @Composable
-    private fun PeriodButton(label: String, periodKey: String, isActive: Boolean, widgetId: Int) {
+    private fun PeriodChip(
+        label: String,
+        periodKey: String,
+        currentPeriod: String,
+        chipActive: Color,
+        chipInactive: Color,
+        textOnActive: Color,
+        textOnInactive: Color,
+    ) {
+        val isActive = currentPeriod == periodKey
         Box(
             modifier = GlanceModifier
                 .cornerRadius(12.dp)
-                .background(
-                    ColorProvider(
-                        if (isActive) Color.White else Color(0xFF1E1E1E)
-                    )
-                )
+                .background(ColorProvider(if (isActive) chipActive else chipInactive))
                 .clickable(
                     actionRunCallback<ChangePeriodAction>(
-                        actionParametersOf(
-                            ActionParameters.Key<Int>("widgetId") to widgetId,
-                            ActionParameters.Key<String>("period") to periodKey,
-                        )
+                        actionParametersOf(PERIOD_KEY to periodKey)
                     )
                 )
                 .padding(horizontal = 14.dp, vertical = 8.dp),
@@ -186,7 +216,7 @@ class RevenueWidget : GlanceAppWidget() {
             Text(
                 label,
                 style = TextStyle(
-                    color = ColorProvider(if (isActive) Color.Black else Color(0xAAFFFFFF)),
+                    color = ColorProvider(if (isActive) textOnActive else textOnInactive),
                     fontSize = 11.sp,
                     fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
                 ),
@@ -201,8 +231,8 @@ class ChangePeriodAction : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters,
     ) {
-        val widgetId = parameters[ActionParameters.Key<Int>("widgetId")] ?: return
-        val period = parameters[ActionParameters.Key<String>("period")] ?: return
+        val period = parameters[PERIOD_KEY] ?: return
+        val widgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
         WidgetPrefs.saveConfig(context, widgetId, period, null, null)
         RevenueWidget().updateAll(context)
     }

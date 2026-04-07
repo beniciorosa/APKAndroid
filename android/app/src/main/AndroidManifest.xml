@@ -52,8 +52,7 @@
         <!-- Period Change Receiver (widget buttons) -->
         <receiver
             android:name=".widget.ChangePeriodReceiver"
-            android:exported="true">
-        </receiver>
+            android:exported="false" />
 
         <!-- Widget Receiver -->
         <receiver

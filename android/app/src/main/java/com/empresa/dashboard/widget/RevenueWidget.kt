@@ -1,7 +1,6 @@
 package com.empresa.dashboard.widget
 
 import android.content.Context
-import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -48,6 +47,7 @@ class RevenueWidget : GlanceAppWidget() {
         val (period, from, to) = WidgetPrefs.readPeriod(context, appWidgetId)
         val theme = WidgetPrefs.readTheme(context, appWidgetId)
 
+        // Tentar buscar dados frescos
         val revenue = WidgetApi.fetchRevenue(period, from, to)
 
         val total: String
@@ -64,8 +64,8 @@ class RevenueWidget : GlanceAppWidget() {
         }
 
         provideContent {
-            val colors = if (theme == "blue") blueColors() else darkColors()
-            WidgetLayout(context, total, updatedAt, period, appWidgetId, colors)
+            val c = if (theme == "blue") blueColors() else darkColors()
+            WidgetLayout(context, total, updatedAt, period, appWidgetId, c)
         }
     }
 
@@ -114,10 +114,8 @@ class RevenueWidget : GlanceAppWidget() {
                     .fillMaxSize()
                     .cornerRadius(24.dp)
                     .background(ColorProvider(c.bg))
-                    .padding(20.dp)
+                    .padding(24.dp)
                     .clickable(actionStartActivity<MainActivity>()),
-                verticalAlignment = Alignment.Top,
-                horizontalAlignment = Alignment.Start,
             ) {
                 // Logo
                 Row(
@@ -127,27 +125,28 @@ class RevenueWidget : GlanceAppWidget() {
                     Image(
                         provider = ImageProvider(R.drawable.escalada_mark),
                         contentDescription = "Escalada",
-                        modifier = GlanceModifier.size(22.dp),
+                        modifier = GlanceModifier.size(26.dp),
                         colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(c.textMain)),
                     )
-                    Spacer(GlanceModifier.width(8.dp))
+                    Spacer(GlanceModifier.width(10.dp))
                     Text(
                         "ESCALADA",
                         style = TextStyle(
                             color = ColorProvider(c.textMain.copy(alpha = 0.7f)),
-                            fontSize = 11.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                         ),
                     )
                 }
 
-                Spacer(GlanceModifier.height(16.dp))
+                Spacer(GlanceModifier.height(20.dp))
 
+                // Valor grande
                 Text(
                     total,
                     style = TextStyle(
                         color = ColorProvider(c.textMain),
-                        fontSize = 32.sp,
+                        fontSize = 38.sp,
                         fontWeight = FontWeight.Bold,
                     ),
                 )
@@ -159,22 +158,22 @@ class RevenueWidget : GlanceAppWidget() {
                         "Atualizado $updatedAt",
                         style = TextStyle(
                             color = ColorProvider(c.textMuted),
-                            fontSize = 10.sp,
+                            fontSize = 11.sp,
                         ),
                     )
                 }
 
                 Spacer(GlanceModifier.defaultWeight())
 
-                // Botões via PendingIntent (BroadcastReceiver)
+                // Botões de período — grandes
                 Row(
                     modifier = GlanceModifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     PeriodChip(context, "Hoje", "today", period, widgetId, c)
-                    Spacer(GlanceModifier.width(6.dp))
+                    Spacer(GlanceModifier.width(8.dp))
                     PeriodChip(context, "Mês", "this-month", period, widgetId, c)
-                    Spacer(GlanceModifier.width(6.dp))
+                    Spacer(GlanceModifier.width(8.dp))
                     PeriodChip(context, "30D", "last-30-days", period, widgetId, c)
                 }
             }
@@ -191,25 +190,21 @@ class RevenueWidget : GlanceAppWidget() {
         c: WColors,
     ) {
         val isActive = currentPeriod == periodKey
-        val intent = Intent(context, ChangePeriodReceiver::class.java).apply {
-            action = "${ChangePeriodReceiver.ACTION}.$widgetId.$periodKey"
-            putExtra("period", periodKey)
-            putExtra("widgetId", widgetId)
-        }
+        val intent = ChangePeriodReceiver.createIntent(context, widgetId, periodKey)
 
         Box(
             modifier = GlanceModifier
-                .cornerRadius(12.dp)
+                .cornerRadius(14.dp)
                 .background(ColorProvider(if (isActive) c.chipActive else c.chipInactive))
                 .clickable(actionSendBroadcast(intent))
-                .padding(horizontal = 14.dp, vertical = 8.dp),
+                .padding(horizontal = 18.dp, vertical = 10.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 label,
                 style = TextStyle(
                     color = ColorProvider(if (isActive) c.textOnActive else c.textOnInactive),
-                    fontSize = 11.sp,
+                    fontSize = 13.sp,
                     fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
                 ),
             )
